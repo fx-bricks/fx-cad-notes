@@ -1,6 +1,6 @@
 # Fx Bricks CAD Pipeline Notes
 
-Fx Bricks designs and fabricates products which are designed to be compatible with the LEGO® System grid.  These products include electronic controllers and train system elements such as track, wheels, and other accessories.  These products are predominantly manufactured using injection molded ABS plastic.  Products such as train track, also incorporate stamped metal components with the plastic.
+[Fx Bricks](https://www.fxbricks.com) designs and fabricates products which are designed to be compatible with the LEGO® System grid.  These products include electronic controllers and train system elements such as track, wheels, and other accessories.  These products are predominantly manufactured using injection molded ABS plastic.  Products such as train track, also incorporate stamped metal components with the plastic.
 
 From the beginning, our aim was to use a CAD pipeline which was automated, repeatable, and parametric.  This ruled out traditional "hand drawn" CAD models since it would require a great deal of repetitive and tedious workflows as well as being vulnerable to errors due to operator fatigue and inevitable slips of the mouse.
 
@@ -18,14 +18,29 @@ The diagram below shows the overall architecture of our CAD pipeline.  The core 
 
 CadQuery itself uses the [OpenCascade](https://www.opencascade.com/content/overview) CAD kernel indirectly through the [python-occ](https://github.com/tpaviot/pythonocc-core) module (OCC) which provides python bindings for OpenCascade's C++ API.  OCC performs all of the low level construction of solids based on a hierarchy of geometric entities starting with edges, progressing to wires, faces and eventually enclosed solids.  CadQuery abstracts the complexity of building shapes and solids with a simple to use "fluid" API which efficiently chains together a series of operations into a single logical line of python code.
 
-Our CAD Model Generator does interact with the OCC core directly for specialized tasks such as file import/export, meshing, and low-level geometric algorithms such tangent and intersection computation.  However, the overwhelming interaction is with the CadQuery API directly.
+For example, this code:
+
+```
+r = (
+    cq.Workplane("XY")
+    .moveTo(0, 0)
+    .lineTo(radius, 0)
+    .radiusArc((radius * cos(th), radius * sin(th)), -radius)
+    .close()
+    .extrude(depth)
+)
+```
+
+makes a extruded "pie slice" shape with specified radius, angle and depth.  This example illustrates the expressive nature of the CadQuery API.  It interprets design intent into useful geometric objects up to complex composite models.
+
+Our CAD Model Generator does interact with the OCC core directly for specialized tasks such as file import/export, meshing, and low-level geometric algorithms such as tangent and intersection computation.  However, the overwhelming interaction is with the CadQuery API directly.
 
 The output of our CAD pipeline is a variety of different assets files aimed at particular tasks.  These include:
 
-- **STL** mesh files - used for 3D printed prototype components and eventually for high quality rendered animations using Blender
-- **STEP** files - these are the primary manufacturing files used for plastic injection molding and progressive stamping. STEP files are also used for viewing and validation with [FreeCAD](https://www.freecadweb.org)
+- [**STL**](https://en.wikipedia.org/wiki/STL_(file_format)) mesh files - used for 3D printed prototype components and eventually for high quality rendered animations using Blender
+- [**STEP**](https://en.wikipedia.org/wiki/ISO_10303-21) files - these are the primary manufacturing files used for plastic injection molding and progressive stamping. STEP files are also used for viewing and validation with [FreeCAD](https://www.freecadweb.org)
 - [**LDraw**](https://www.ldraw.org) files - the LEGO® fan community has developed a range of software tools and applications based on the [LDraw specification](https://www.ldraw.org/article/218.html) for describing parts.  We use LDraw files to author custom instruction guides and to share with our users.
-- **SVG** files - vector illustration format useful for making documentation
+- [**SVG**](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics) files - vector illustration format useful for making documentation
 
 ## Model Generator Process Flow
 
@@ -33,7 +48,7 @@ The diagram below shows the key steps our model generator uses to build our CAD 
 
 ![alt text](./images/software_steps.png)
 
-Our CAD pipeline starts with a model specification.  This specification is either coded directly as a python dictionary or ingested into a dictionary from YAML files.  Either way, the specification provides a top level description of desired component to build.  The specification describes the basic geometry of the component as well as many other options and parameters such as draft angles, filleting, fidelity, etc.
+Our CAD pipeline starts with a model specification.  This specification is either coded directly as a python dictionary or ingested into a dictionary from [YAML](https://en.wikipedia.org/wiki/YAML) files.  Either way, the specification provides a top level description of desired component to build.  The specification describes the basic geometry of the component as well as many other options and parameters such as draft angles, filleting, fidelity, etc.
 
 ### Intermediate Solid Generation
 
@@ -57,7 +72,7 @@ When a model has been composited into its final form, optional post processing c
 
 ### Asset Export
 
-Primarily, the model generator exports STEP files which are then used to view and validate the model using tools such as FreeCAD.  However, if asset formats such as STL or LDraw are required, the model must be converted into a mesh representation instead of a geometric BRep representation.  Essentially this involves "digitizing" the solid with a triangular mesh shell.  This process is "lossy" in that curved faces are approximated by a series of triangular facets.  The OCC kernel uses an adpative algorithm to produce very good meshes which we then consume for STL and LDraw export.
+Primarily, the model generator exports STEP files which are then used to view and validate the model using tools such as FreeCAD.  However, if asset formats such as STL or LDraw are required, the model must be converted into a [mesh representation](https://en.wikipedia.org/wiki/Mesh_generation) instead of a geometric [BRep representation](https://en.wikipedia.org/wiki/Boundary_representation).  Essentially this involves "digitizing" the solid with a triangular mesh shell.  This process is "lossy" in that curved faces are approximated by a series of triangular facets.  The OCC kernel uses an adpative algorithm to produce very good meshes which we then consume for STL and LDraw export.
 
 ## Conclusions
 
