@@ -109,3 +109,7 @@ S8 Straight Track Model:
 S8 Straight Track Pre-production Injection Molded Prototype:
 
 ![alt text](./images/FxS8-Molded.png)
+
+P40R Switch Track Preliminary Model:
+
+![alt text](./images/P40Rm.png)
